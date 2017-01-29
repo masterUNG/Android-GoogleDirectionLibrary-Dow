@@ -1,9 +1,17 @@
 package com.akexorcist.googledirection.sample;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -30,6 +38,9 @@ public class AlternativeDirectionActivity extends AppCompatActivity implements O
     private LatLng origin = new LatLng(35.1766982, 136.9413508);
     private LatLng destination = new LatLng(35.1800441, 136.9532567);
     private String[] colors = {"#7fff7272", "#7f31c7c5", "#7fff8a00"};
+    private Double startLatADouble = 0.0, startLngADouble = 0.0;
+    private LocationManager locationManager;
+    private Criteria criteria;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,8 +50,127 @@ public class AlternativeDirectionActivity extends AppCompatActivity implements O
         btnRequestDirection = (Button) findViewById(R.id.btn_request_direction);
         btnRequestDirection.setOnClickListener(this);
 
+        //My Setup
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        criteria.setAltitudeRequired(false);
+        criteria.setBearingRequired(false);
+
         ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
+
+    }   // Main Method
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        afterResume();
+
     }
+
+    private void afterResume() {
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        locationManager.removeUpdates(locationListener);
+
+        Location networkLocation = myFindLocation(LocationManager.NETWORK_PROVIDER);
+        if (networkLocation != null) {
+            startLatADouble = networkLocation.getLatitude();
+            startLngADouble = networkLocation.getLongitude();
+        }
+
+        Location gpsLocation = myFindLocation(LocationManager.GPS_PROVIDER);
+        if (gpsLocation != null) {
+            startLatADouble = gpsLocation.getLatitude();
+            startLngADouble = gpsLocation.getLongitude();
+        }
+
+        Log.d("29janV1", "Lat ==> " + startLatADouble);
+        Log.d("29janV1", "Lng ==> " + startLngADouble);
+
+
+    }   // afterResume
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        locationManager.removeUpdates(locationListener);
+
+    }
+
+    public Location myFindLocation(String strProvider) {
+
+        Location location = null;
+
+        if (locationManager.isProviderEnabled(strProvider)) {
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return null;
+            }
+            locationManager.requestLocationUpdates(strProvider, 1000, 10, locationListener);
+            location = locationManager.getLastKnownLocation(strProvider);
+
+        }
+
+        return location;
+    }
+
+
+
+    public LocationListener locationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+
+            startLatADouble = location.getLatitude();
+            startLngADouble = location.getLongitude();
+
+        }
+
+        @Override
+        public void onStatusChanged(String s, int i, Bundle bundle) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String s) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String s) {
+
+        }
+    };
+
+
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
