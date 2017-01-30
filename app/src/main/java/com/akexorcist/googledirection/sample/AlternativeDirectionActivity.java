@@ -28,6 +28,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 
 import java.util.ArrayList;
 
@@ -146,7 +147,6 @@ public class AlternativeDirectionActivity extends AppCompatActivity implements O
     }
 
 
-
     public LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
@@ -233,10 +233,11 @@ public class AlternativeDirectionActivity extends AppCompatActivity implements O
 
     public void requestDirection() {
         Snackbar.make(btnRequestDirection, "Direction Requesting...", Snackbar.LENGTH_SHORT).show();
+
         GoogleDirection.withServerKey(serverKey)
                 .from(origin)
                 .to(destination)
-                .transportMode(TransportMode.WALKING)
+                .transportMode(TransportMode.DRIVING)
                 .alternativeRoute(true)
                 .execute(this);
     }
@@ -244,20 +245,37 @@ public class AlternativeDirectionActivity extends AppCompatActivity implements O
     @Override
     public void onDirectionSuccess(Direction direction, String rawBody) {
         Snackbar.make(btnRequestDirection, "Success with status : " + direction.getStatus(), Snackbar.LENGTH_SHORT).show();
+        Polyline polyline = null;
         if (direction.isOK()) {
-            googleMap.addMarker(new MarkerOptions().position(origin));
-            googleMap.addMarker(new MarkerOptions().position(destination));
+//            googleMap.addMarker(new MarkerOptions().position(origin));
+//            googleMap.addMarker(new MarkerOptions().position(destination));
+
+            Log.d("30janV2", "จำนวนเส้นทางที่ google แนะนำมา ==> " + direction.getRouteList().size());
+
+
 
             for (int i = 0; i < direction.getRouteList().size(); i++) {
+
                 Route route = direction.getRouteList().get(i);
                 String color = colors[i % colors.length];
                 ArrayList<LatLng> directionPositionList = route.getLegList().get(0).getDirectionPoint();
-                googleMap.addPolyline(DirectionConverter.createPolyline(this, directionPositionList, 5, Color.parseColor(color)));
-            }
+                polyline = googleMap.addPolyline(DirectionConverter.createPolyline(this, directionPositionList, 10, Color.parseColor(color)));
 
-            btnRequestDirection.setVisibility(View.GONE);
-        }
-    }
+            }   // for
+
+            //btnRequestDirection.setVisibility(View.GONE);
+        }   // if
+
+        polyline.setClickable(true);
+        googleMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+            @Override
+            public void onPolylineClick(Polyline polyline) {
+                Log.d("30janV2", "click PolyLine OK");
+            }
+        });
+
+
+    }   // onDirectionSuccess
 
     @Override
     public void onDirectionFailure(Throwable t) {
