@@ -1,6 +1,8 @@
 package com.akexorcist.googledirection.sample;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Criteria;
@@ -12,8 +14,10 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 import com.akexorcist.googledirection.DirectionCallback;
 import com.akexorcist.googledirection.GoogleDirection;
@@ -44,6 +48,9 @@ public class AlternativeDirectionActivity extends AppCompatActivity implements O
     private Double endLatADouble, endLngADouble;
     private LocationManager locationManager;
     private Criteria criteria;
+    private EditText originEditText, destinationEditText;
+    private String originString, destinationString;
+    private MyManage myManage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +66,7 @@ public class AlternativeDirectionActivity extends AppCompatActivity implements O
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
         criteria.setAltitudeRequired(false);
         criteria.setBearingRequired(false);
+        myManage = new MyManage(AlternativeDirectionActivity.this);
 
         ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
 
@@ -264,6 +272,7 @@ public class AlternativeDirectionActivity extends AppCompatActivity implements O
                 ArrayList<LatLng> directionPositionList = route.getLegList().get(0).getDirectionPoint();
                 polylines[i] = googleMap.addPolyline(DirectionConverter.createPolyline(this, directionPositionList, 10, Color.parseColor(color)));
                 polylines[i].setClickable(true);
+                polylines[i].setZIndex(i);
 
             }   // for
 
@@ -275,11 +284,59 @@ public class AlternativeDirectionActivity extends AppCompatActivity implements O
             @Override
             public void onPolylineClick(Polyline polyline) {
                 Log.d("30janV2", "click PolyLine OK");
+                Log.d("30janV2", "index ==> " + polyline.getZIndex());
+                int index = (int) polyline.getZIndex();
+
+//                Toast.makeText(AlternativeDirectionActivity.this,
+//                        "คุณเลือกเส้นทางที่ " + Integer.toString(index), Toast.LENGTH_SHORT).show();
+
+                myAlertDialog(index);
+
             }
         });
 
 
     }   // onDirectionSuccess
+
+    private void myAlertDialog(int index) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(AlternativeDirectionActivity.this);
+        builder.setCancelable(false);
+        builder.setIcon(R.drawable.doremon48);
+        builder.setTitle("ข้อมูลที่ต้องการบันทึก");
+
+        LayoutInflater layoutInflater = AlternativeDirectionActivity.this.getLayoutInflater();
+        final View view = layoutInflater.inflate(R.layout.my_layout, null);
+        builder.setView(view);
+        builder.setMessage("คุณเลือกเส้นทาง " + Integer.toString(index));
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+                //Bind Widget
+                originEditText = (EditText) view.findViewById(R.id.editText);
+                destinationEditText = (EditText) view.findViewById(R.id.editText2);
+
+                originString = originEditText.getText().toString().trim();
+                destinationString = destinationEditText.getText().toString().trim();
+
+                Log.d("30janV2", "Origin ==> " + originString);
+                Log.d("30janV2", "Destination ==> " + destinationString);
+
+                dialogInterface.dismiss();
+            }
+        });
+        builder.show();
+
+
+    }   // myAlertDialog
 
     @Override
     public void onDirectionFailure(Throwable t) {

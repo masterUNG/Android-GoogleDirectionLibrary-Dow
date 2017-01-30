@@ -368,6 +368,10 @@
         "source": "/Users/masterUNG/Desktop/Android-GoogleDirectionLibrary-master/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.0.1/res/drawable/notification_bg_low.xml"
     },
     {
+        "merged": "/Users/masterUNG/Desktop/myProject/Android-GoogleDirectionLibrary-master/app/build/intermediates/res/merged/debug/drawable/doremon48.png",
+        "source": "/Users/masterUNG/Desktop/myProject/Android-GoogleDirectionLibrary-master/app/src/main/res/drawable/doremon48.png"
+    },
+    {
         "merged": "/Users/masterUNG/Desktop/Android-GoogleDirectionLibrary-master/app/build/intermediates/res/merged/debug/drawable/abc_ic_ab_back_material.xml",
         "source": "/Users/masterUNG/Desktop/Android-GoogleDirectionLibrary-master/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.0.1/res/drawable/abc_ic_ab_back_material.xml"
     },
